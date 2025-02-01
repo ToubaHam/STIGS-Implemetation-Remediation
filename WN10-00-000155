@@ -1,0 +1,62 @@
+<#
+.SYNOPSIS
+    This PowerShell script ensures compliance with STIG ID: WN10-00-000155.
+    - Disables Windows PowerShell 2.0 to mitigate security risks.
+    - Ensures that the maximum size of the Windows Application event log is at least 32768 KB (32 MB).
+
+.NOTES
+    Author          : Touba Hamdi
+    LinkedIn        : linkedin.com/in/toubah/
+    GitHub          : github.com/ToubaHam
+    Date Created    : 2025-02-01
+    Last Modified   : 2025-02-01
+    Version         : 1.0
+    CVEs            : N/A
+    Plugin IDs      : N/A
+    STIG-ID         : WN10-00-000155
+
+.TESTED ON
+    Date(s) Tested  : 
+    Tested By       : 
+    Systems Tested  : 
+    PowerShell Ver. : 
+
+.USAGE
+    Run as Administrator in PowerShell.
+    Example:
+    PS C:\> .\STIG_WN10-00-000155_Remediation.ps1
+#>
+
+# Define Registry Path for Event Log Configuration
+$eventLogRegPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\EventLog\Application"
+$eventLogKeyName = "MaxSize"
+$eventLogKeyValue = 0x8000  # 32MB (32768 KB)
+
+# Define Feature Name for PowerShell 2.0 Removal
+$powerShellFeature = "MicrosoftWindowsPowerShellV2Root"
+
+# Ensure the Event Log Registry Path Exists
+if (!(Test-Path $eventLogRegPath)) {
+    New-Item -Path $eventLogRegPath -Force | Out-Null
+}
+
+# Set Event Log MaxSize to 32MB (STIG Requirement)
+Set-ItemProperty -Path $eventLogRegPath -Name $eventLogKeyName -Value $eventLogKeyValue -PropertyType DWord -Force
+Write-Output "✅ Event Log MaxSize set to 32768 KB (32 MB) for STIG compliance."
+
+# Check if PowerShell 2.0 is Installed
+$ps2Status = Get-WindowsOptionalFeature -Online -FeatureName $powerShellFeature
+
+if ($ps2Status.State -eq "Enabled") {
+    # Disable PowerShell 2.0
+    Disable-WindowsOptionalFeature -Online -FeatureName $powerShellFeature -NoRestart
+    Write-Output "✅ PowerShell 2.0 has been disabled. A restart may be required."
+} else {
+    Write-Output "✔️ PowerShell 2.0 is already disabled."
+}
+
+# Confirm Changes
+Write-Output "🚀 STIG Remediation Completed: WN10-00-000155"
+
+# Suggest Restart
+Write-Output "🔄 Please restart the system for changes to fully take effect."
