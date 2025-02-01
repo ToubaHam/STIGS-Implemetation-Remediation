@@ -1,0 +1,36 @@
+<#
+.SYNOPSIS
+    Ensures STIG compliance by disabling Solicited Remote Assistance.
+
+.DESCRIPTION
+    This script:
+    - Checks if the registry setting for Remote Assistance exists.
+    - Configures the registry to disable Solicited Remote Assistance.
+    - Applies the STIG fix to prevent unauthorized remote access.
+
+.NOTES
+    Author          : Touba Hamdi
+    LinkedIn        : linkedin.com/in/toubah/
+    GitHub          : github.com/ToubaHam
+    Date Created    : 2025-02-01
+    Last Modified   : 2025-02-01
+    Version         : 1.0
+    STIG-ID         : WN10-CC-000155
+
+.USAGE
+    1. Open PowerShell ISE as Administrator.
+    2. Load and run this script.
+
+#>
+
+# Ensure the script runs as Administrator
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Error "Run PowerShell ISE as Administrator!" -ErrorAction Stop
+}
+
+# Define registry path and value
+$registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Terminal Services"
+$registryName = "fAllowToGetHelp"
+$registryValue = 0
+
+# Ensu
