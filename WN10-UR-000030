@@ -1,0 +1,45 @@
+<#
+.SYNOPSIS
+    Ensures STIG compliance by restricting the "Back up files and directories" (SeBackupPrivilege) user right to Administrators only.
+
+.DESCRIPTION
+    This script:
+    - Checks if non-compliant users/groups are assigned the privilege.
+    - Removes non-compliant entries and sets the privilege to Administrators only.
+    - Applies the updated security policy.
+    - Restarts the system to enforce the change.
+
+.NOTES
+    Author          : Touba Hamdi
+    LinkedIn        : linkedin.com/in/toubah/
+    GitHub          : github.com/ToubaHam
+    Date Created    : 2025-02-01
+    Last Modified   : 2025-02-01
+    Version         : 1.0
+    STIG-ID         : WN10-UR-000030
+
+.USAGE
+    1. Open PowerShell ISE as Administrator.
+    2. Load and run this script.
+#>
+
+# Ensure PowerShell is running as Administrator
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Error "Run PowerShell ISE as Administrator!" -ErrorAction Stop
+}
+
+# Export current security settings
+secedit /export /areas USER_RIGHTS /cfg $env:TEMP\secpol.cfg
+
+# Restrict "Back up files and directories" to Administrators only
+(Get-Content $env:TEMP\secpol.cfg) -replace "SeBackupPrivilege\s*=.*", "SeBackupPrivilege = *S-1-5-32-544" | Set-Content $env:TEMP\secpol.cfg
+
+# Apply the updated security settings
+secedit /configure /db $env:TEMP\secedit.sdb /cfg $env:TEMP\secpol.cfg /areas USER_RIGHTS /quiet
+
+Write-Output "STIG Fix Applied: 'Back up files and directories' now restricted to Administrators."
+
+# Restart system to apply changes
+Write-Output "Restarting system in 10 seconds. Press Ctrl + C to cancel."
+Start-Sleep -Seconds 10
+shutdown /r /t 0 /f
