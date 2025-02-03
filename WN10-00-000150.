@@ -1,0 +1,45 @@
+<#
+.SYNOPSIS
+    Ensures STIG compliance by enabling Structured Exception Handling Overwrite Protection (SEHOP).
+
+.DESCRIPTION
+    This script:
+    - Creates the missing registry path if it does not exist.
+    - Configures the registry to enable SEHOP.
+    - Ensures compliance with STIG ID: WN10-00-000150.
+
+.NOTES
+    Author          : Touba Hamdi
+    LinkedIn        : linkedin.com/in/toubah/
+    GitHub          : github.com/ToubaHam
+    Date Created    : 2025-02-03
+    Last Modified   : 2025-02-03
+    Version         : 1.0
+    STIG-ID         : WN10-00-000150
+
+.USAGE
+    1. Open PowerShell ISE as Administrator.
+    2. Load and run this script.
+
+#>
+
+# Ensure the script runs as Administrator
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Error "Run PowerShell ISE as Administrator!" -ErrorAction Stop
+}
+
+# Define registry path and value
+$registryPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Kernel"
+$registryName = "DisableExceptionChainValidation"
+$registryValue = 0  # 0x00000000 in hex (SEHOP enabled)
+
+# Create the missing registry path if it does not exist
+if (-not (Test-Path $registryPath)) {
+    Write-Output "SEHOP registry path missing. Creating..."
+    New-Item -Path $registryPath -Force | Out-Null
+}
+
+# Set the registry value
+Set-ItemProperty -Path $registryPath -Name $registryName -Value $registryValue -Type DWord -Force
+
+Write-Output "STIG Fix Applied: SEHOP has been enabled."
