@@ -1,0 +1,44 @@
+<#
+.SYNOPSIS
+    Ensures STIG compliance by configuring telemetry settings.
+
+.DESCRIPTION
+    This script:
+    - Creates the missing registry path if it does not exist.
+    - Configures telemetry settings to Security (0) or Basic (1).
+    - Ensures compliance with STIG ID: WN10-CC-000205.
+
+.NOTES
+    Author          : Touba Hamdi
+    LinkedIn        : linkedin.com/in/toubah/
+    GitHub          : github.com/ToubaHam
+    Date Created    : 2025-02-03
+    Last Modified   : 2025-02-03
+    Version         : 1.0
+    STIG-ID         : WN10-CC-000205
+
+.USAGE
+    1. Open PowerShell ISE as Administrator.
+    2. Load and run this script.
+
+#>
+
+# Ensure the script runs as Administrator
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Error "Run PowerShell ISE as Administrator!" -ErrorAction Stop
+}
+
+# Define registry path and value
+$registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\DataCollection"
+$registryName = "AllowTelemetry"
+$registryValue = 0  # Set to 0 for Security level, change to 1 for Basic
+
+# Create the missing registry path if it does not exist
+if (-not (Test-Path $registryPath)) {
+    New-Item -Path $registryPath -Force | Out-Null
+}
+
+# Set the registry value
+Set-ItemProperty -Path $registryPath -Name $registryName -Value $registryValue -Type DWord -Force
+
+Write-Output "STIG Fix Applied: Telemetry level set to Security (0)."
