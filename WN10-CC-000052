@@ -1,0 +1,45 @@
+<#
+.SYNOPSIS
+    Ensures STIG compliance by configuring the ECC Curve Order for SSL.
+
+.DESCRIPTION
+    This script:
+    - Creates the missing registry path if it does not exist.
+    - Configures the registry to enforce the correct ECC Curve Order.
+    - Ensures compliance with STIG ID: WN10-CC-000052.
+
+.NOTES
+    Author          : Touba Hamdi
+    LinkedIn        : linkedin.com/in/toubah/
+    GitHub          : github.com/ToubaHam
+    Date Created    : 2025-02-03
+    Last Modified   : 2025-02-03
+    Version         : 1.0
+    STIG-ID         : WN10-CC-000052
+
+.USAGE
+    1. Open PowerShell ISE as Administrator.
+    2. Load and run this script.
+
+#>
+
+# Ensure the script runs as Administrator
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Error "Run PowerShell ISE as Administrator!" -ErrorAction Stop
+}
+
+# Define registry path and value
+$registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\Cryptography\Configuration\SSL\00010002"
+$registryName = "EccCurves"
+$registryValue = "NistP384", "NistP256"  # Multi-string values
+
+# Create the missing registry path if it does not exist
+if (-not (Test-Path $registryPath)) {
+    Write-Output "ECC Curve Order registry path missing. Creating..."
+    New-Item -Path $registryPath -Force | Out-Null
+}
+
+# Set the registry value as REG_MULTI_SZ
+Set-ItemProperty -Path $registryPath -Name $registryName -Value $registryValue -Type MultiString -Force
+
+Write-Output "STIG Fix Applied: ECC Curve Order configured successfully."
