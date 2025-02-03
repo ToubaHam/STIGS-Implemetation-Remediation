@@ -1,0 +1,50 @@
+<#
+.SYNOPSIS
+    Ensures STIG compliance by configuring BitLocker authentication.
+
+.DESCRIPTION
+    This script:
+    - Creates the missing registry path if it does not exist.
+    - Configures the registry to require TPM startup PIN and key.
+    - Ensures compliance with STIG ID: WN10-00-000031.
+
+.NOTES
+    Author          : Touba Hamdi
+    LinkedIn        : linkedin.com/in/toubah/
+    GitHub          : github.com/ToubaHam
+    Date Created    : 2025-02-03
+    Last Modified   : 2025-02-03
+    Version         : 1.0
+    STIG-ID         : WN10-00-000031
+
+.USAGE
+    1. Open PowerShell ISE as Administrator.
+    2. Load and run this script.
+
+#>
+
+# Ensure the script runs as Administrator
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Error "Run PowerShell ISE as Administrator!" -ErrorAction Stop
+}
+
+# Define registry paths and values
+$registryPath = "HKLM:\SOFTWARE\Policies\Microsoft\FVE"
+
+$settings = @{
+    "UseAdvancedStartup" = 1
+    "UseTPMPIN" = 1
+    "UseTPMKeyPIN" = 1
+}
+
+# Create the missing registry path if it does not exist
+if (-not (Test-Path $registryPath)) {
+    New-Item -Path $registryPath -Force | Out-Null
+}
+
+# Apply each setting
+foreach ($name in $settings.Keys) {
+    Set-ItemProperty -Path $registryPath -Name $name -Value $settings[$name] -Type DWord -Force
+}
+
+Write-Output "STIG Fix Applied: BitLocker startup authentication is now enforced."
