@@ -1,0 +1,30 @@
+# Uninstall Wireshark - Works for any installed version
+Write-Output "Checking if Wireshark is installed..."
+
+# Find Wireshark in the registry
+$wiresharkReg = Get-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*" `
+                  | Where-Object { $_.DisplayName -match "Wireshark" }
+
+# If Wireshark is found, proceed with uninstallation
+if ($wiresharkReg) {
+    $uninstallString = $wiresharkReg.UninstallString
+    Write-Output "Wireshark found: $($wiresharkReg.DisplayName)"
+    
+    # Remove quotes from uninstall string if present
+    if ($uninstallString -match '^\"(.+)\"$') {
+        $uninstallString = $matches[1]
+    }
+
+    # Check if uninstaller requires silent mode parameter
+    if ($uninstallString -match "msiexec") {
+        Write-Output "Uninstalling Wireshark silently..."
+        Start-Process -FilePath "msiexec.exe" -ArgumentList "/x $($wiresharkReg.PSChildName) /quiet /norestart" -NoNewWindow -Wait
+    } else {
+        Write-Output "Running Wireshark uninstaller..."
+        Start-Process -FilePath $uninstallString -ArgumentList "/S" -NoNewWindow -Wait
+    }
+
+    Write-Output "Wireshark has been uninstalled."
+} else {
+    Write-Output "Wireshark is not installed on this system."
+}
